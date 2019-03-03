@@ -21,21 +21,38 @@ use yii\web\IdentityInterface;
  * @property integer $created_at
  * @property integer $updated_at
  * @property integer $creator_id
- * @property string $password write-only password
+ * @property string $avatar
+ * @property string $password
  * @property Task[] $createdTasks
  * @property Task[] $updatedTasks
  * @property Task[] $activedTasks
  * @property Project[] $updatedProjects
+ * @mixin \mohorev\file\UploadImageBehavior::class
  */
 class User extends ActiveRecord implements IdentityInterface
 {
+  private $password;
+
   const STATUS_DELETED = 0;
   const STATUS_ACTIVE = 10;
+
+  const STATUSES = [
+    self::STATUS_DELETED, self::STATUS_ACTIVE
+  ];
+
+  const STATUSES_LABELS = [
+    self::STATUS_DELETED => 'Удален', self::STATUS_ACTIVE => 'Активен'
+  ];
 
   const RELATION_CREATED_TASKS = 'createdTasks';
   const RELATION_UPDATED_TASKS = 'updatedTasks';
   const RELATION_ACTIVED_TASKS = 'activedTasks';
   const RELATION_UPDATED_PROJECTS = 'updatedProjects';
+
+  const AVATAR_PREVIEW = 'preview';
+  const AVATAR_ICO = 'ico';
+  const SCENARIO_INSERT = 'insert';
+  const SCENARIO_UPDATE = 'update';
 
 
   /**
@@ -53,6 +70,18 @@ class User extends ActiveRecord implements IdentityInterface
   {
     return [
       TimestampBehavior::className(),
+      [
+        'class' => \mohorev\file\UploadImageBehavior::class,
+        'attribute' => 'avatar',
+        'scenarios' => [self::SCENARIO_UPDATE],
+        //'placeholder' => '@app/modules/user/assets/images/userpic.jpg',
+        'path' => '@frontend/web/upload/user/{id}',
+        'url' => Yii::$app->params['hosts.domain'] . Yii::getAlias('@web/upload/user/{id}'),
+        'thumbs' => [
+          self::AVATAR_ICO => ['width' => 30, 'quality' => 90],
+          self::AVATAR_PREVIEW => ['width' => 200, 'height' => 200]
+        ],
+      ],
     ];
   }
 
@@ -61,9 +90,34 @@ class User extends ActiveRecord implements IdentityInterface
    */
   public function rules()
   {
-    return [
+    /*return [
       ['status', 'default', 'value' => self::STATUS_ACTIVE],
       ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+      [['email'], 'string']
+    ];*/
+
+
+    return [
+      [['username', 'email'], 'required'],
+      [['status', 'created_at', 'updated_at'], 'integer'],
+      [['username', 'email'], 'string', 'max' => 255],
+      [['username', 'email', 'auth_key', 'password'], 'safe'],
+      [['username', 'email'], 'unique'],
+      ['avatar', 'image', 'extensions' => 'jpg, jpeg, gif, png', 'on' => [self::SCENARIO_UPDATE]],
+      ['status', 'default', 'value' => self::STATUS_ACTIVE],
+      ['status', 'in', 'range' => self::STATUSES],
+    ];
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function attributeLabels()
+  {
+    return [
+      'id' => 'ID',
+      'email' => 'email',
     ];
   }
 
@@ -171,7 +225,20 @@ class User extends ActiveRecord implements IdentityInterface
    */
   public function setPassword($password)
   {
-    $this->password_hash = Yii::$app->security->generatePasswordHash($password);
+    if($password) {
+      $this->password_hash = Yii::$app->security->generatePasswordHash($password);
+      $this->generateAuthKey();
+    }
+
+    $this->password = $password;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPassword()
+  {
+    return $this->password;
   }
 
   /**
