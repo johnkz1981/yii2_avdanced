@@ -10,26 +10,68 @@ use yii\widgets\ActiveForm;
 
 <div class="project-form">
 
-    <?php $form = ActiveForm::begin(); ?>
+  <?php $form = \yii\bootstrap\ActiveForm::begin(
+    [
+      'layout' => 'horizontal',
+      'fieldConfig' =>
+        [
+          'horizontalCssClasses' => ['label' => 'col-sm-2',]
+        ]
+    ]
+  ); ?>
 
-    <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
+  <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'description')->textarea(['rows' => 6]) ?>
+  <?= $form->field($model, 'description')->textarea(['rows' => 6]) ?>
 
-    <?= $form->field($model, 'active')->textInput() ?>
+  <?= $form->field($model, 'active')->dropDownList(\common\models\Project::STATUS_LABELS) ?>
 
-    <?= $form->field($model, 'creator_id')->textInput() ?>
+  <?php if (!$model->isNewRecord):
 
-    <?= $form->field($model, 'updater_id')->textInput() ?>
+    $form->field($model, \common\models\Project::RELATION_PROJECT_USERS)->widget(\unclead\multipleinput\MultipleInput::class, [
+      // https://github.com/unclead/yii2-multiple-input
 
-    <?= $form->field($model, 'created_at')->textInput() ?>
+      'id' => 'project-users-widget',
+      'max' => 10,
+      'min' => 0,
+      'addButtonPosition' => \unclead\multipleinput\MultipleInput::POS_HEADER,
 
-    <?= $form->field($model, 'updated_at')->textInput() ?>
+      /* 'columns' => [
+        'name' => 'user_id',
+        'type' => \unclead\multipleinput\MultipleInputColumn::TYPE_STATIC,
+        'value' => function ($data) {
 
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+          return $data ? Html::a($data->user->username, ['user/view', 'id' => $data->user]) : '';
+        }
+      ],*/
+      [
+        'name' => 'project_id',
+        'type' => 'hiddenInput',
+        'defaultValue' => $model->id
+      ],
+      [
+        'name' => 'user_id',
+        'type' => 'dropDownList',
+        'title' => 'User',
+        'items' => \common\models\User::find()->select('username')->indexBy('id')->column()
+      ],
+      [
+        'name' => 'role',
+        'type' => 'dropDownList',
+        'title' => 'Роль',
+        'items' => \common\models\ProjectUser::ROLES
+      ]
+    ]);
+
+  endif;
+  ?>
+
+  <div class="form-group">
+    <div class="col-md-2 col-md-offset-2">
+      <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
     </div>
+  </div>
 
-    <?php ActiveForm::end(); ?>
+  <?php \yii\bootstrap\ActiveForm::end(); ?>
 
 </div>

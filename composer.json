@@ -21,7 +21,9 @@
         "cboden/ratchet": "dev-master",
         "dmstr/yii2-adminlte-asset": "2.6.2",
         "mohorev/yii2-upload-behavior": "*",
-        "yiisoft/yii2-imagine": "^2.0@dev"
+        "yiisoft/yii2-imagine": "^2.0@dev",
+        "unclead/yii2-multiple-input": "~2.0",
+        "la-haute-societe/yii2-save-relations-behavior": "*"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",
