@@ -42,86 +42,86 @@ class Project extends \yii\db\ActiveRecord
     self::STATUS_ACTIVE => 'активен',
   ];
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function tableName()
-    {
-        return 'project';
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public static function tableName()
+  {
+    return 'project';
+  }
 
-    public function behaviors()
-    {
-        return [
-            'timestamp' => TimestampBehavior::class,
-            'blameable' => ['class' => BlameableBehavior::class,
-                'createdByAttribute' => 'creator_id',
-                'updatedByAttribute' => 'updater_id'
-            ],
-          'saveRelations' => [
-            'class' => SaveRelationsBehavior::class,
-            'relations' => [
-              self::RELATION_PROJECT_USERS
-            ]
-          ]
-        ];
-    }
+  public function behaviors()
+  {
+    return [
+      'timestamp' => TimestampBehavior::class,
+      'blameable' => ['class' => BlameableBehavior::class,
+        'createdByAttribute' => 'creator_id',
+        'updatedByAttribute' => 'updater_id'
+      ],
+      'saveRelations' => [
+        'class' => SaveRelationsBehavior::class,
+        'relations' => [
+          self::RELATION_PROJECT_USERS
+        ]
+      ]
+    ];
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function rules()
-    {
-        return [
-            [['title', 'description', 'active'], 'required'],
-            [['description'], 'string'],
-            [['active', 'creator_id', 'updater_id', 'created_at', 'updated_at'], 'integer'],
-            [['title'], 'string', 'max' => 255],
-            [['creator_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['creator_id' => 'id']],
-            [['updater_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['updater_id' => 'id']],
-        ];
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function rules()
+  {
+    return [
+      [['title', 'description', 'active'], 'required'],
+      [['description'], 'string'],
+      [['active', 'creator_id', 'updater_id', 'created_at', 'updated_at'], 'integer'],
+      [['title'], 'string', 'max' => 255],
+      [['creator_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['creator_id' => 'id']],
+      [['updater_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['updater_id' => 'id']],
+    ];
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => 'ID',
-            'title' => 'Title',
-            'description' => 'Description',
-            'active' => 'Active',
-            'creator_id' => 'Creator ID',
-            'updater_id' => 'Updater ID',
-            'created_at' => 'Created At',
-            'updated_at' => 'Updated At',
-        ];
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function attributeLabels()
+  {
+    return [
+      'id' => 'ID',
+      'title' => 'Title',
+      'description' => 'Description',
+      'active' => 'Active',
+      'creator_id' => 'Creator ID',
+      'updater_id' => 'Updater ID',
+      'created_at' => 'Created At',
+      'updated_at' => 'Updated At',
+    ];
+  }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getCreator()
-    {
-        return $this->hasOne(User::className(), ['id' => 'creator_id']);
-    }
+  /**
+   * @return \yii\db\ActiveQuery
+   */
+  public function getCreator()
+  {
+    return $this->hasOne(User::className(), ['id' => 'creator_id']);
+  }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getUpdater()
-    {
-        return $this->hasOne(User::className(), ['id' => 'updater_id']);
-    }
+  /**
+   * @return \yii\db\ActiveQuery
+   */
+  public function getUpdater()
+  {
+    return $this->hasOne(User::className(), ['id' => 'updater_id']);
+  }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getProjectUsers()
-    {
-        return $this->hasMany(ProjectUser::className(), ['project_id' => 'id']);
-    }
+  /**
+   * @return \yii\db\ActiveQuery
+   */
+  public function getProjectUsers()
+  {
+    return $this->hasMany(ProjectUser::className(), ['project_id' => 'id']);
+  }
 
   /**
    * @return \yii\db\ActiveQuery
@@ -131,12 +131,17 @@ class Project extends \yii\db\ActiveRecord
     return $this->hasMany(Task::class, ['project_id' => 'id']);
   }
 
-    /**
-     * {@inheritdoc}
-     * @return ProjectQuery the active query used by this AR class.
-     */
-    public static function find()
-    {
-        return new ProjectQuery(get_called_class());
-    }
+  /**
+   * {@inheritdoc}
+   * @return ProjectQuery the active query used by this AR class.
+   */
+  public static function find()
+  {
+    return new ProjectQuery(get_called_class());
+  }
+
+  public function getUsersData()
+  {
+      return $this->getProjectUsers()->select('role')->indexBy('user_id')->column();
+  }
 }
